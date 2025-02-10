@@ -1,6 +1,6 @@
 import './style.css'
 
-//inicializar el canvas
+//initialice canvas
 const canvas = document.querySelector('canvas')
 const context = canvas.getContext('2d')
 
@@ -47,7 +47,7 @@ const board = [
   [1,1,1,1,1,1,1,1,0,0,0,1,1,1],
 ]
 
-//Pieza del jugador
+//gamer piece
 const piece = {
   position: {x: 5, y:5},
   shape: [
@@ -56,11 +56,59 @@ const piece = {
   ]
 }
 
+// Random piece
+const PIECES = [
+  [
+    [1,1],
+    [1,1]
+  ],
+  [
+    [1,1,1,1]
+  ],
+  [
+    [0,1,0],
+    [1,1,1]
+  ],
+  [
+    [1,1,0],
+    [0,1,1]
+  ],
+  [
+    [0,1,1],
+    [1,1,0]
+  ],
+  [
+    [1,0],
+    [1,0],
+    [1,1]
+  ]
+]
+
 //game loop
-function update (){
+let lastTime = 0
+let dropCounter = 0
+let dropInterval = 1000
+
+function update (time = 0){
+  const deltaTime = time - lastTime
+  lastTime = time
+  
+  dropCounter += deltaTime
+
+  if(dropCounter > dropInterval){
+    piece.position.y++
+    if(checkCollision()){
+      piece.position.y--
+      solidifyPiece()
+      removeRows()
+    }
+    dropCounter = 0
+  }
+
   draw()
   window.requestAnimationFrame(update)
 }
+
 function draw() {
   context.fillStyle = '#0129'
   context.fillRect(0, 0, canvas.width, canvas.height)
@@ -84,7 +132,7 @@ function draw() {
   })
 }
 
-//position de la pieza
+//position piece
 document.addEventListener('keydown', event =>{
   if(event.key === 'ArrowLeft') {
     piece.position.x--
@@ -103,11 +151,13 @@ document.addEventListener('keydown', event =>{
     if(checkCollision()){
       piece.position.y--
       solidifyPiece()
+      removeRows()
     }
   }
+
 })
 
-//colisiones
+//collisions
 function checkCollision() {
   return piece.shape.find((row, y)=>{
     return row.find((value, x)=>{
@@ -119,18 +169,45 @@ function checkCollision() {
   })
 }
 
-//solidificar las piezas en el tablero
+//solidify the board pieces
 function solidifyPiece() {
-  piece.shape.forEach((row, x)=>{
-    row.forEach((value, y) => {
+  piece.shape.forEach((row, y)=>{
+    row.forEach((value, x) => {
       if(value === 1){
         board[y + piece.position.y][x + piece.position.x] = 1
       }
     })
   })
 
-  piece.position.x = 0
+  // random piece
+  piece.shape = PIECES[Math.floor(Math.random() * PIECES.length)]
+  
+  // reset the position of the piece
+  piece.position.x = Math.floor(BOARD_WIDTH / 2) - 1
   piece.position.y = 0
+
+  // Game Over
+  if(checkCollision()){
+    window.alert('Game Over')
+    board.forEach(row => row.fill(0))
+  }
+}
+
+//delete entire lines
+function removeRows() {
+  const rowsToRemove = []
+
+  board.forEach((row, y) => {
+    if(row.every(value => value === 1)){
+      rowsToRemove.push(y)
+    }
+  })
+
+  rowsToRemove.forEach(y => {
+    board.splice(y, 1)
+    const newRow = Array(BOARD_WIDTH).fill(0)
+    board.unshift(newRow)
+  })
 }
 
 update()
