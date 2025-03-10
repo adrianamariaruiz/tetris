@@ -157,6 +157,28 @@ document.addEventListener('keydown', event =>{
 
 })
 
+// rotate piece
+document.addEventListener("keydown", (event) => {
+  if(event.key === 'ArrowUp'){
+    const rotated = []
+
+    for(let i = 0; i < piece.shape[0].length; i++){
+      const row = []
+      for(let j = piece.shape.length - 1; j >= 0; j--){
+        row.push(piece.shape[j][i])
+      }
+      rotated.push(row)
+    }
+
+    const previousShape = piece.shape
+    piece.shape = rotated
+
+    if(checkCollision()){
+      piece.shape = previousShape
+    }
+  }
+})
+
 //collisions
 function checkCollision() {
   return piece.shape.find((row, y)=>{
